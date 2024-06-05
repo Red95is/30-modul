@@ -1,0 +1,42 @@
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+@pytest.fixture(autouse=True)
+def driver():
+    driver = webdriver.Chrome('./chromedriver.exe')  
+   
+    driver.get('https://petfriends.skillfactory.ru/login')
+
+    yield driver
+
+    driver.quit()
+
+def test_check_pets_table(driver):
+    
+    driver.find_element(By.ID, 'email').send_keys('vasya@mail.com')
+    
+    driver.find_element(By.ID, 'pass').send_keys('12345')
+    
+    driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+    
+    assert driver.find_element(By.TAG_NAME, 'h1').text == "PetFriends"
+
+    wait = WebDriverWait(driver, 10)
+    
+    
+    pets_table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.table.table-hover tbody')))
+    rows = pets_table.find_elements(By.TAG_NAME, 'tr')
+
+    for row in rows:
+        cells = row.find_elements(By.TAG_NAME, 'td')
+        assert len(cells) > 0
+        name = cells[0].text
+        breed = cells[1].text
+        age = cells[2].text
+
+        assert name != ''
+        assert breed != ''
+        assert age != ''
